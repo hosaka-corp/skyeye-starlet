@@ -47,6 +47,7 @@
 //#include <openssl/sha.h>
 #include "sha1.h"
 
+#define SOCK_PATH			"/tmp/starlet.sock"
 #define STARLET_DEBUG			1
 
 #define PRINT(x...)			printf("[STARLET]: " x)
@@ -2383,7 +2384,6 @@ enum ipc_state {
 	IPC_SNDACK,
 };
 
-#define SOCK_PATH "ipcsock"
 
 int sendall(int s, void *buf, int len)
 {

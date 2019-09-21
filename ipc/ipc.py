@@ -61,7 +61,7 @@ class EmuState:
 		print " FAR:  %08x"%self.far
 
 class SkyeyeSocket:
-	def __init__(self, file="ipcsock"):
+	def __init__(self, file="/tmp/starlet.sock"):
 		self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 		self.sock.connect(file)
 	def send(self, msg):
@@ -88,7 +88,7 @@ class SkyeyeProtocol(object):
 	MSG_WRITE = 5
 	MSG_STATE = 6
 	MSG_EXIT = 7
-	def __init__(self, file="ipcsock"):
+	def __init__(self, file="/tmp/starlet.sock"):
 		self.s = SkyeyeSocket(file)
 		self.readbuf = None
 		self.ppcstat = None
@@ -410,7 +410,7 @@ class IOSIoctlv(IPCRequest):
 		return IPCRequest.prepare(self,ipcdev)
 
 class SkyeyeIPC(SkyeyeProtocol):
-	def __init__(self, file="ipcsock", heaplo=0x11000000, heaphi=0x12000000):
+	def __init__(self, file="/tmp/starlet.sock", heaplo=0x11000000, heaphi=0x12000000):
 		SkyeyeProtocol.__init__(self, file)
 		self.mem = MemMgr(heaplo, heaphi)
 		self.requests = {}
