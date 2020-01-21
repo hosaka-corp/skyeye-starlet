@@ -189,14 +189,16 @@ nandflash_starlet_write_word (struct device_desc *dev, u32 addr, u32 data)
 	case NFCONF:
 		io->nfconf=data;
 		NANDFLASH_DBG("starlet NAND: W conf=%08x\n", data);
-		
 		break;
+
 	case NFCMD:	
-		if (data == 0x7FFFFFFF) {
+		if (data == 0x7FFFFFFF)
+		{
 			NANDFLASH_DBG("starlet NAND: ignoring 0x7FFFFFFF\n");
 			return ADDR_HIT;
 		}
-		if (data == 0) {
+		if (data == 0)
+		{
 			NANDFLASH_DBG("starlet NAND: ignoring 0\n");
 			return ADDR_HIT;
 		}
@@ -206,102 +208,121 @@ nandflash_starlet_write_word (struct device_desc *dev, u32 addr, u32 data)
 		unsigned int flags=(data & 0x0000f000)>>12;
 		NANDFLASH_DBG("sending bitmask=%x command %02x datasize=%x\n", bitmask, command, datasize);
 		int pageno = io->address[4] << 16 | io->address[3] << 8 | io->address[2];
+
 		switch (command) {
 			case 0: break;
-			case NAND_CMD_READID: NADNFLASH_VERBOSE("[NAND] READID\n"); break;
-			case NAND_CMD_RESET: NADNFLASH_VERBOSE("[NAND] reset\n"); break;
-			case NAND_CMD_READ0b:
-					/*NADNFLASH_VERBOSE("[NAND] READ1 address %02x%02x%02x%02x %02x%02x datasize=%x address=%08x spareaddr=%08x\n", 
-						   io->address[5], io->address[4], io->address[3], io->address[2], io->address[1], io->address[0], datasize, io->nf_data, io->nf_ecc)*/;
-				break;
+			case NAND_CMD_READID: 
+				NADNFLASH_VERBOSE("[NAND] READID\n"); break;
+			case NAND_CMD_RESET: 
+				NADNFLASH_VERBOSE("[NAND] reset\n"); break;
+			case NAND_CMD_READ0b: break;
 			case NAND_CMD_ERASE1: NADNFLASH_VERBOSE("[NAND] ERASE PREPARE\n"); break;
 			case NAND_CMD_ERASE2:
 				NADNFLASH_VERBOSE("[NAND] ERASE pages %08x-%08x\n", pageno, pageno+0x3f);
 				// todo: implement erase
-			break;
-			case 0x80: NADNFLASH_VERBOSE("[NAND] PAGE PROGRAM START (addr = %02x%02x%02x%02x %02x%02x) (size = %x)\n",
+				break;
+			case 0x80: 
+				NADNFLASH_VERBOSE("[NAND] PAGE PROGRAM START (addr = %02x%02x%02x%02x %02x%02x) (size = %x)\n",
 				io->address[5], io->address[4], io->address[3], io->address[2], io->address[1], io->address[0], datasize);
-			break;
-			case 0x85: NADNFLASH_VERBOSE("[NAND] RANDOM DATA IN (offset = %02x%02x) (size = %x)\n", io->address[1], io->address[0], datasize); break;
-			case 0x10: NADNFLASH_VERBOSE("[NAND] PAGE PROGRAM CONFIRM\n"); break;
-			case NAND_CMD_STATUS: /*printf("[NAND] GETSTATUS\n");*/ break;
+				break;
+			case 0x85: 
+				NADNFLASH_VERBOSE("[NAND] RANDOM DATA IN (offset = %02x%02x) (size = %x)\n", 
+					io->address[1], io->address[0], datasize); 
+				break;
+			case 0x10: 
+				NADNFLASH_VERBOSE("[NAND] PAGE PROGRAM CONFIRM\n");
+				break;
+			case NAND_CMD_STATUS: 
+				/*printf("[NAND] GETSTATUS\n");*/ 
+				break;
 			default:
 				printf("[NAND] unknown command %02x address %02x%02x%02x%02x %02x%02x datasize=%x address=%08x spareaddr=%08x flags=%x bitmask=%2x\n", 
-						command, io->address[5], io->address[4], io->address[3], io->address[2], io->address[1], io->address[0], datasize, io->nf_data, io->nf_ecc, flags, bitmask);
+					command, io->address[5], io->address[4], io->address[3], io->address[2], io->address[1], io->address[0], 
+					datasize, io->nf_data, io->nf_ecc, flags, bitmask);
 		}
+
 		/*printf("[NAND] command %02x address %02x%02x%02x%02x %02x%02x datasize=%x address=%08x spareaddr=%08x flags=%x bitmask=%2x\n", 
 			command, io->address[5], io->address[4], io->address[3], io->address[2], io->address[1], io->address[0], datasize, io->nf_data, io->nf_ecc, flags, bitmask);*/
+
 		nandflash_dev->sendcmd(nandflash_dev,(u8)command);
-		for (i=0; i<6; i++) if (bitmask & (1 << i)) {
+		for (i=0; i<6; i++) 
+		{
+			if (bitmask & (1 << i))
 				nandflash_dev->sendaddr(nandflash_dev,io->address[i]);
-			}
-		if(datasize>0) {
-			if(flags&NAND_FLAGS_RD) {
-				for (i=0; i<datasize; i++) {
+		}
+
+		if(datasize>0) 
+		{
+			if(flags&NAND_FLAGS_RD) 
+			{
+				for (i=0; i<datasize; i++) 
+				{
 					u32 tmp = nandflash_dev->readdata(nandflash_dev);
 					io->buf[i] = tmp & 0xff;
 				}
-				if(datasize <= 0x800) {
+				if(datasize <= 0x800) 
+				{
 					starlet_host2arm(state, io->nf_data, io->buf, datasize);
-				} else if(datasize == 0x840) {
+				} 
+				else if(datasize == 0x840) 
+				{
 					starlet_host2arm(state, io->nf_data, io->buf, 0x800);
 					starlet_host2arm(state, io->nf_ecc, &io->buf[0x800], 0x40);
-					if(flags&NAND_FLAGS_ECC) {
+					if(flags&NAND_FLAGS_ECC) 
+					{
 						u8 bytes[4], i;
 						//printf("nf_ecc is at %08x, writing to %08x\n", io->nf_ecc, io->nf_ecc ^ 0x40);
-						for (i = 0; i < 4; i++) {
-							/*if (!memcmp(io->buf + 0x830 + i*4, "\xff\xff\xff\xff", 4)) memcpy(bytes, "\xff\xff\xff\xff", 4);
-							else if (!memcmp(io->buf + 0x830 + i*4, "\x00\x00\x00\x00", 4)) memcpy(bytes, "\x00\x00\x00\x00", 4);
-							else */calc_ecc(io->buf + i*512, bytes);
-							/*if (memcmp(io->buf + 0x830 + i*4, bytes, 4)) {
-								printf("[NAND] mismatch ecc%d=%02x%02x%02x%02x calc=%02x%02x%02x%02x\n", i,
-									io->buf[0x830+i*4], io->buf[0x831+i*4], io->buf[0x832+i*4], io->buf[0x833+i*4], 
-									bytes[0], bytes[1], bytes[2], bytes[3]);
-								if (i==0) {
-									int j;
-									for (j = 0; j < 512; j++) {
-										printf("%02x ", io->buf[j]);
-										if ((j%16) == 15) printf("\n");
-									}
-								}
-								memcpy(bytes, io->buf + 0x830 + i*4, 4);
-							}*/
+						for (i = 0; i < 4; i++) 
+						{
 							starlet_host2arm(state, (io->nf_ecc ^ 0x40) + i * 4, bytes, 4);
 						}
 					}
-				} else {
+				} 
+				else 
+				{
 					printf("Bad NAND data size: 0x%x\n",datasize);
 					exit(0);
 				}
 			}
-			if(flags&NAND_FLAGS_WR) {
-				if(datasize <= 0x800) {
+
+			if(flags&NAND_FLAGS_WR) 
+			{
+				if(datasize <= 0x800) 
+				{
 					starlet_arm2host(state, io->buf, io->nf_data, datasize);
-				} else if(datasize == 0x840) {
+				} 
+				else if(datasize == 0x840) 
+				{
 					u8 i;
 					starlet_arm2host(state, io->buf, io->nf_data, 0x800);
 					starlet_arm2host(state, &io->buf[0x800], io->nf_ecc, 0x40);
-					for (i = 0; i < 4; i++) {
+					for (i = 0; i < 4; i++) 
+					{
 						//printf("Writing ecc%d: %02x%02x%02x%02x\n", i, io->buf[0x830+4*i], io->buf[0x831+4*i], io->buf[0x832+4*i], io->buf[0x833+4*i]);
 					}
-				} else {
+				} 
+				else 
+				{
 					printf("Bad NAND data size: 0x%x\n",datasize);
 					exit(0);
 				}
-				if(flags&NAND_FLAGS_ECC) {
+				if(flags&NAND_FLAGS_ECC) 
+				{
 					u8 bytes[4], i;
 					if(datasize != 0x800) {
 						printf("Bad NAND data size for ECC: 0x%x\n",datasize);
 						exit(0);
 					}
 					//starlet_hexdump(io->buf, 2048);
-					for (i = 0; i < 4; i++) {
+					for (i = 0; i < 4; i++) 
+					{
 						calc_ecc(io->buf + i*512, bytes);
 						//printf("Calc'd ecc%d: %02x%02x%02x%02x\n", i, bytes[0],bytes[1],bytes[2],bytes[3]);
 						starlet_host2arm(state, (io->nf_ecc ^ 0x40) + i * 4, bytes, 4);
 					}
 				}
-				for (i=0; i<datasize; i++) {
+				for (i=0; i<datasize; i++) 
+				{
 					nandflash_dev->senddata(nandflash_dev, io->buf[i]);
 				}
 			}
